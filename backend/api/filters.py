@@ -12,11 +12,11 @@ class RecipeFilter(filters.FilterSet):
         field_name='tags__slug',
         lookup_expr='icontains'
     )
-    is_favorited = filters.CharFilter(
-        field_name='author.favorite_recipes',
-        lookup_expr='icontains'
-    )
+    # is_favorited = filters.CharFilter(
+    #     field_name='author.favorite_recipes',
+    #     lookup_expr='icontains'
+    # )
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = ('author', 'tags')

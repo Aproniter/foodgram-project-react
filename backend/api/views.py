@@ -8,7 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
@@ -18,8 +18,8 @@ from users.models import User
 from recipes.models import Tag, Recipe, Ingredient
 from .serializers import (
     UserSerializer, RoleSerializer, RegistrationSerializer,
-    TokenSerializer, TagSerializer, RecipeSerializer,
-    IngredientSerializer, SubscriptionSerializer
+    TokenSerializer, TagSerializer, RecipeReadSerializer,
+    RecipeWriteSerializer, IngredientSerializer, SubscriptionSerializer
 )
 from .permissions import (
     AdminModeratorAuthorPermission, IsAdminOrReadOnly,
@@ -73,7 +73,7 @@ def get_token(request):
     return Response(token)
 
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     # permission_classes = [AdminOnly]
@@ -105,13 +105,17 @@ class UsersViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['get', 'del', 'post'],
         url_name='subscriptions',
-        serializer_class=SubscriptionSerializer
+        serializer_class=SubscriptionSerializer        
     )
     def subscriptions(self, request):        
         queryset = User.objects.filter(
             subscription__in=[User.objects.get(id=request.user.id)]
         )
-        serializer = self.get_serializer(queryset, many=True)        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)  
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -120,11 +124,15 @@ class TagViewSet(ModelViewSet):
     serializer_class = TagSerializer
 
 
-class RecipeViewSet(ModelViewSet):
-    serializer_class = RecipeSerializer
+class RecipeViewSet(ModelViewSet):   
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
     queryset = Recipe.objects.all()
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
 
 class IngredientViewSet(ModelViewSet):

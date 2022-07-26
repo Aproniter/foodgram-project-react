@@ -3,6 +3,7 @@ import re
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
+from django.db import models
 
 from users.models import User
 from recipes.models import Tag, Recipe, Ingredient
@@ -16,6 +17,12 @@ class RegistrationSerializer(serializers.Serializer):
         max_length=150
     )
     password = serializers.CharField(
+        max_length=150
+    )
+    first_name = serializers.CharField(
+        max_length=150
+    )
+    last_name = serializers.CharField(
         max_length=150
     )
 
@@ -43,7 +50,7 @@ class TokenSerializer(serializers.Serializer):
     )
 
     class Meta:
-        fields = ('token',)
+        fields = ('token', 'email', 'password')
 
     # def validate_username(self, data):
     #     if re.match(r'^[\\w.@+-]+\\z', data):
@@ -76,21 +83,26 @@ class RoleSerializer(serializers.ModelSerializer):
         return data
 
 
-class IsSubscribed(serializers.Field):
-
-    def to_representation(self, value):
-        return True
-
-
 class Recipes(serializers.Field):
 
     def to_representation(self, value):
-        return value.recipes
+        ret = [
+            {
+                'id': i.id,
+                'name': i.name,
+                'image': i.image,
+                'cooking_time': i.cooking_time
+            } for i in value.recipes.all()
+        ]
+        return ret
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    is_subscribed = IsSubscribed(source='*')
+    is_subscribed = serializers.BooleanField(source='subscriptions')
     recipes = Recipes(source='*')
+    recipes_count = serializers.IntegerField(
+        source='recipes.count'
+    )
 
     class Meta:
         fields = (
@@ -100,23 +112,22 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'recipes'   
+            'recipes',
+            'recipes_count'
         )
         model = User
 
 
 class TagSerializer(serializers.ModelSerializer):
-
+    
     class Meta:
-        fields = '__all__'    
+        fields = (
+            "id",
+            "name",
+            "color",
+            "slug"
+        )
         model = Tag
-
-
-class RecipeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Recipe
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -124,3 +135,30 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'    
         model = Ingredient
+
+
+class RecipeReadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Recipe
+
+
+class Ingredient(serializers.Field):
+
+    def to_representation(self, value):
+        ret = []
+        for i in value.objects.all():
+            
+        return ret
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    # ingredients = IngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+    class Meta:
+        fields = '__all__'
+        model = Recipe

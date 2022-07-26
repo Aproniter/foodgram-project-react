@@ -43,6 +43,17 @@ class Ingredient(models.Model):
         return self.name
 
 
+class IngredientAmount(models.Model):
+    ingredient = models.ForeignKey(
+        'Ingredient',
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        'Recipe',
+        on_delete=models.CASCADE
+    )
+
+
 class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Рецепт',
