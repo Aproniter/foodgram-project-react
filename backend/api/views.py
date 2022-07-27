@@ -127,6 +127,7 @@ class TagViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):   
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
+    pagination_class = LimitOffsetPagination
     queryset = Recipe.objects.all()
 
     def get_serializer_class(self):

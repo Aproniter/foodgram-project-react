@@ -52,6 +52,7 @@ class IngredientAmount(models.Model):
         'Recipe',
         on_delete=models.CASCADE
     )
+    amount = models.IntegerField()
 
 
 class Recipe(models.Model):

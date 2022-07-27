@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from users.models import User
-from recipes.models import Tag, Recipe, Ingredient
+from recipes.models import Tag, Recipe, Ingredient, IngredientAmount
 
 
 class RegistrationSerializer(serializers.Serializer):
@@ -144,17 +144,30 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         model = Recipe
 
 
-class Ingredient(serializers.Field):
+class IngredientField(serializers.Field):
 
-    def to_representation(self, value):
-        ret = []
-        for i in value.objects.all():
-            
-        return ret
+    def to_internal_value(self, data):
+        print(data)
+        # for i in data:
+        #     # print(i)
+        #     ingredient = Ingredient.objects.get(id=i['id'])
+        #     print(ingredient)
+        #     print(self)
+        # return data
+
+    # def to_representation(self, value):
+    #     print(value)
+    #     ret = [
+    #         {
+    #             'id': value.id,
+    #             'amount': value.name,
+    #         }
+    #     ]
+    #     return ret
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    # ingredients = IngredientSerializer(many=True)
+    # ingredients = IngredientField(source='*')    
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
@@ -162,3 +175,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Recipe
+    
+    def to_internal_value(self, data):
+        print(data)
+        print(self)
