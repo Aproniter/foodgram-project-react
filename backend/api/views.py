@@ -125,8 +125,8 @@ class TagViewSet(ModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):   
-    filter_backends = (DjangoFilterBackend, )
-    filterset_class = RecipeFilter
+    #filter_backends = (DjangoFilterBackend, )
+    #filterset_class = RecipeFilter
     pagination_class = LimitOffsetPagination
     queryset = Recipe.objects.all()
 
@@ -134,6 +134,7 @@ class RecipeViewSet(ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
         return RecipeWriteSerializer
+
 
 
 class IngredientViewSet(ModelViewSet):

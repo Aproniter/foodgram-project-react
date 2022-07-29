@@ -1,3 +1,5 @@
+import jsonfield
+
 from django.db import models
 from django.core.validators import MinValueValidator
 
@@ -50,6 +52,8 @@ class IngredientAmount(models.Model):
     )
     recipe = models.ForeignKey(
         'Recipe',
+        blank=True,
+        null=True,
         on_delete=models.CASCADE
     )
     amount = models.IntegerField()
@@ -82,7 +86,7 @@ class Recipe(models.Model):
         'Ingredient',
         verbose_name='Ингредиенты',
         related_name='recipes',
-        blank=True,  
+        blank=True
     )
     image = models.TextField(
         verbose_name='Изображение',
@@ -102,3 +106,19 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ShopingCart(models.Model):
+    recipes = models.ManyToManyField(
+        'Recipe',
+        verbose_name='Рецепты',
+        related_name='shoping_cart',
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+    # def __str__(self):
+    #     return self.user

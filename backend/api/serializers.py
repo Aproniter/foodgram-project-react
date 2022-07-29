@@ -137,45 +137,137 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
 
-class RecipeReadSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Recipe
-
-
-class IngredientField(serializers.Field):
+class IngredientField(serializers.RelatedField):
+    amount = {}
+    def to_representation(self, data):
+        ret = {
+                'id': data.id,
+                'name': data.name,
+                'measurement_unit': data.measurement_unit,
+                'amount': self.amount[data.id]
+        } 
+        return ret
 
     def to_internal_value(self, data):
-        print(data)
-        # for i in data:
-        #     # print(i)
-        #     ingredient = Ingredient.objects.get(id=i['id'])
-        #     print(ingredient)
-        #     print(self)
-        # return data
+        amount = IngredientAmount.objects.create(
+            ingredient=Ingredient.objects.get(id=data['id']),
+            amount=data['amount']
+        )
+        ingredient_amount = {
+            'amount_id': amount.id,
+            'ingredient': Ingredient.objects.get(id=data['id'])
+        }
+        self.amount.update({data['id']: data['amount']})
+        return ingredient_amount
 
-    # def to_representation(self, value):
-    #     print(value)
-    #     ret = [
-    #         {
-    #             'id': value.id,
-    #             'amount': value.name,
-    #         }
-    #     ]
-    #     return ret
+
+class IngredientReadField(serializers.Field):
+
+    def to_representation(self, data):
+        ret = [{
+                'id': i.id,
+                'name': i.name,
+                'measurement_unit': i.measurement_unit,
+                'amount': IngredientAmount.objects.get(
+                    recipe=data.id,
+                    ingredient=i.id
+                ).amount
+        } for i in data.ingredients.all()]
+        return ret
+
+
+class TagField(serializers.RelatedField):
+    def to_representation(self, data):
+        ret = {
+                'id': data.id,
+                'name': data.name,
+                'color': data.color,
+                'slug': data.slug
+        } 
+        return ret
+
+    def to_internal_value(self, data):
+        return data
+
+
+class AuthorField(serializers.Field):
+    def to_representation(self, data):
+        ret = {
+                'id': data.author.id,
+                'email': data.author.email,
+                'username': data.author.username,
+                'first_name': data.author.first_name,
+                'last_name': data.author.last_name,
+                'is_subscribed': (
+                    data.author in 
+                    self.context['request'].user.subscriptions.all()
+                )
+        } 
+        return ret
+
+    def to_internal_value(self, data):
+        return data
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    # ingredients = IngredientField(source='*')    
-    tags = serializers.PrimaryKeyRelatedField(
+    ingredients = IngredientField(
+        many=True,
+        queryset=Ingredient.objects.all(),
+    )
+    tags = TagField(
         many=True,
         queryset=Tag.objects.all()
     )
+    author = AuthorField(
+        required=False,
+    )    
+    
     class Meta:
         fields = '__all__'
         model = Recipe
     
-    def to_internal_value(self, data):
-        print(data)
-        print(self)
+    def create(self, data):
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            cooking_time=data.get('cooking_time'),
+            text=data.get('text'),
+            name=data.get('name'),
+            image=data.get('image'),
+        )        
+        recipe.ingredients.set([i['ingredient'] for i in data.get('ingredients')])
+        recipe.tags.set(data.get('tags'))
+        amounts = IngredientAmount.objects.filter(
+            id__in=[i['amount_id'] for i in data.get('ingredients')]
+        )
+        
+        for amount in amounts:
+            amount.recipe=recipe
+            amount.save()
+        self.context['request'].user.favorite_recipes.add(recipe)
+        return recipe
+
+
+class RecipeReadSerializer(serializers.ModelSerializer):
+    tags = TagField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+    author = AuthorField(
+        source='*'
+    )
+    ingredients = IngredientReadField(
+        source='*'
+    )
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    
+
+    class Meta:
+        fields = '__all__'
+        model = Recipe
+
+    def get_is_favorited(self, obj):        
+        return obj in self.context['request'].user.favorite_recipes.all()
+
+    def get_is_in_shopping_cart(self, obj):
+        return obj in self.context['request'].user.shoping_cart.recipes.all()

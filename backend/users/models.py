@@ -54,6 +54,11 @@ class User(AbstractUser):
         related_name='subscription',
         blank=True,
     )
+    shoping_cart = models.ForeignKey(
+        to='recipes.ShopingCart',
+        on_delete=models.CASCADE,
+        related_name='user',
+    )
 
     @property
     def is_admin(self):
