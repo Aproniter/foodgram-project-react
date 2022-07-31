@@ -15,11 +15,14 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from api.filters import RecipeFilter
 from users.models import User
-from recipes.models import Tag, Recipe, Ingredient
+from recipes.models import (
+    Tag, Recipe, Ingredient, IngredientAmount
+)
 from .serializers import (
     UserSerializer, RoleSerializer, RegistrationSerializer,
     TokenSerializer, TagSerializer, RecipeReadSerializer,
-    RecipeWriteSerializer, IngredientSerializer, SubscriptionSerializer
+    RecipeWriteSerializer, RecipeToShoppingCart, RecipeToFavoriteList,
+    IngredientSerializer, SubscriptionSerializer, UserSubscribeSerializer
 )
 from .permissions import (
     AdminModeratorAuthorPermission, IsAdminOrReadOnly,
@@ -77,7 +80,7 @@ class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     # permission_classes = [AdminOnly]
-    lookup_field = 'username'
+    lookup_field = 'pk'
     pagination_class = LimitOffsetPagination
     search_fields = ('^username',)
 
@@ -118,6 +121,22 @@ class UsersViewSet(ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)  
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(
+        detail=True,
+        methods=['delete', 'post'],
+        url_name='subscribe',
+    )
+    def subscribe(self, request, pk):
+        serializer = UserSubscribeSerializer(
+            data={'pk': pk},
+            partial=True,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        if 'deleted' in serializer.validated_data:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+
 
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
@@ -134,6 +153,47 @@ class RecipeViewSet(ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
         return RecipeWriteSerializer
+
+    def perform_destroy(self, recipe):
+        self.request.user.favorite_recipes.remove(recipe)
+        self.request.user.shoping_cart.recipes.remove(recipe)
+        amounts = IngredientAmount.objects.filter(
+            recipe=recipe
+        ).delete()
+        recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(
+        detail=True,
+        methods=['delete', 'post'],
+        url_name='shopping_cart'       
+    )
+    def shopping_cart(self, request, pk):
+        serializer = RecipeToShoppingCart(
+            data={'pk': pk},
+            partial=True,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        if 'deleted' in serializer.validated_data:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True,
+        methods=['delete', 'post'],
+        url_name='favorite'       
+    )
+    def favorite(self, request, pk):
+        serializer = RecipeToFavoriteList(
+            data={'pk': pk},
+            partial=True,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        if 'deleted' in serializer.validated_data:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
 
 
 

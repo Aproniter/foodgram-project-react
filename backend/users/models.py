@@ -58,6 +58,8 @@ class User(AbstractUser):
         to='recipes.ShopingCart',
         on_delete=models.CASCADE,
         related_name='user',
+        blank=True,
+        null=True
     )
 
     @property
