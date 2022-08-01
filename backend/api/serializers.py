@@ -268,7 +268,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         return obj in self.context['request'].user.favorite_recipes.all()
 
     def get_is_in_shopping_cart(self, obj):
-        return obj in self.context['request'].user.shoping_cart.recipes.all()
+        try:
+            return obj in self.context['request'].user.shoping_cart.recipes.all()            
+        except AttributeError:
+            return False
 
 
 class RecipeWriteSerializer(RecipeSerializer):
@@ -324,15 +327,15 @@ class RecipeWriteSerializer(RecipeSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         try:
-            shoping_cart, status = ShopingCart.objects.get_or_create(
+            shoping_cart = ShopingCart.objects.get(
                 user=self.context['request'].user
             )
-            if status:
-                shoping_cart.user.add(self.context['request'].user)
-            shoping_cart.recipes.add(obj)
-            return True
-        except:            
-            return False
+        except ShopingCart.DoesNotExist:
+            shoping_cart = ShopingCart.objects.create()
+            shoping_cart.user.add(self.context['request'].user)
+             
+        shoping_cart.recipes.add(obj)
+        return True
 
 
 class RecipeReadSerializer(RecipeSerializer):
@@ -347,11 +350,14 @@ class RecipeToShoppingCart(serializers.Serializer):
             Recipe, 
             pk=self.initial_data['pk']
         )
-        shoping_cart, status = ShopingCart.objects.get_or_create(
+        try:
+            shoping_cart = ShopingCart.objects.get(
                 user=self.context['request'].user
             )
-        if status:
+        except ShopingCart.DoesNotExist:
+            shoping_cart = ShopingCart.objects.create()
             shoping_cart.user.add(self.context['request'].user)
+            
         if self.context['request'].method == 'DELETE':
             if shoping_cart.recipes.filter(pk=recipe.pk).exists():
                 shoping_cart.recipes.remove(recipe)

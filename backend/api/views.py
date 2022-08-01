@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
-from django_filters.rest_framework import DjangoFilterBackend
+# from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 
-from api.filters import RecipeFilter
 from users.models import User
 from recipes.models import (
     Tag, Recipe, Ingredient, IngredientAmount
@@ -143,11 +142,28 @@ class TagViewSet(ModelViewSet):
     serializer_class = TagSerializer
 
 
-class RecipeViewSet(ModelViewSet):   
-    #filter_backends = (DjangoFilterBackend, )
-    #filterset_class = RecipeFilter
+class RecipeViewSet(ModelViewSet):
     pagination_class = LimitOffsetPagination
-    queryset = Recipe.objects.all()
+    def get_queryset(self):        
+        queryset = Recipe.objects.all()
+        user = self.request.user
+        params = self.request.query_params
+        if 'is_favorited' in params and int(params['is_favorited']):
+            queryset = user.favorite_recipes.all()
+        if (
+            'is_in_shopping_cart' in params 
+            and int(params['is_in_shopping_cart'])
+        ):
+            queryset = user.shoping_cart.recipes.all()
+        if 'tags' in params:
+            tags = dict(**params)['tags']
+            tags = Tag.objects.filter(
+                slug__in=tags
+            )
+            queryset = queryset.filter(
+                tags__in=tags
+            )
+        return queryset
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -198,5 +214,14 @@ class RecipeViewSet(ModelViewSet):
 
 
 class IngredientViewSet(ModelViewSet):
-    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+    def get_queryset(self):
+        queryset = (
+            Ingredient.objects.filter(
+                name__istartswith=self.request.query_params.get('name')
+            ) 
+            if self.request.query_params.get('name') 
+            else Ingredient.objects.all()
+        )
+        return queryset
