@@ -26,7 +26,6 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_simplejwt',
     'django_filters',
     'corsheaders',
 ]
@@ -118,9 +117,12 @@ REST_FRAMEWORK = {
         'rest_framework.pagination.PageNumberPagination',
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    # 'PAGE_SIZE': 10,
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 
 }
 

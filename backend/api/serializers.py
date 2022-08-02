@@ -1,6 +1,9 @@
 import re
 
+from hashlib import sha256
+
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -127,6 +130,26 @@ class RoleSerializer(serializers.ModelSerializer):
         return data
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if 'current_password' not in data:
+            raise serializers.ValidationError(
+                    {'current_password': 'Обязательное поле.'}
+                )
+        if 'new_password' not in data:
+            raise serializers.ValidationError(
+                    {'new_password': 'Обязательное поле.'}
+                )            
+        if not check_password(data['current_password'], user.password):
+            raise serializers.ValidationError(
+                    {'current_password': 'Неверный пароль.'}
+                )
+        return data
+
 class Recipes(serializers.Field):
 
     def to_representation(self, value):
@@ -232,6 +255,12 @@ class TagField(serializers.RelatedField):
 
 class AuthorField(serializers.Field):
     def to_representation(self, data):
+        is_subscribed = (
+            data.author in
+            self.context['request'].user.subscriptions.all()
+            if self.context['request'].user.is_authenticated 
+            else False
+        )
         ret = {
                 'id': data.author.id,
                 'email': data.author.email,
@@ -239,8 +268,7 @@ class AuthorField(serializers.Field):
                 'first_name': data.author.first_name,
                 'last_name': data.author.last_name,
                 'is_subscribed': (
-                    data.author in 
-                    self.context['request'].user.subscriptions.all()
+                    
                 )
         } 
         return ret
@@ -264,12 +292,24 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Recipe
 
-    def get_is_favorited(self, obj):  
-        return obj in self.context['request'].user.favorite_recipes.all()
+    def get_is_favorited(self, obj):
+        favorite = (
+            obj in 
+            self.context['request'].user.favorite_recipes.all()
+            if self.context['request'].user.is_authenticated 
+            else False 
+        )
+        return favorite
 
     def get_is_in_shopping_cart(self, obj):
         try:
-            return obj in self.context['request'].user.shoping_cart.recipes.all()            
+            in_shopping_cart = (
+                obj in 
+                self.context['request'].user.shoping_cart.recipes.all()
+                if self.context['request'].user.is_authenticated 
+                else False 
+            )
+            return in_shopping_cart
         except AttributeError:
             return False
 

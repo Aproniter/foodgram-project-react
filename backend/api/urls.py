@@ -3,7 +3,7 @@ from rest_framework.routers import SimpleRouter
 
 from .views import (    
     UsersViewSet, TagViewSet, RecipeViewSet, IngredientViewSet,
-    registration, get_token
+    registration, get_token, logout
 )
 
 app_name = 'api'
@@ -36,5 +36,6 @@ urlpatterns = [
         name='registration'
     ),
     path('auth/token/login/', get_token, name='get_token'),
+    path('auth/token/logout/', logout, name='logout'),
     path('', include(router.urls)),
 ]

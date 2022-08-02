@@ -117,6 +117,3 @@ class ShopingCart(models.Model):
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
-
-    # def __str__(self):
-    #     return self.user
