@@ -49,10 +49,10 @@ class RegistrationSerializer(serializers.Serializer):
 
 class TokenSerializer(serializers.Serializer):
     email = serializers.CharField(
-        max_length=255
+        max_length=150
     )
     password = serializers.CharField(
-        max_length=255
+        max_length=150
     )
 
     class Meta:

@@ -10,7 +10,6 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
@@ -83,11 +82,10 @@ def get_token(request):
             {'errors': 'Неверный пароль.'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    refresh = RefreshToken.for_user(user)
     try:
         token = Token.objects.get(user=user)
     except Token.DoesNotExist:
-        token = Token.objects.create(user=user, key=str(refresh.access_token))    
+        token = Token.objects.create(user=user)
     resp = {
         'auth_token': token.key,
     }
