@@ -31,6 +31,7 @@ from .permissions import (
     AdminOnly, AuthorPermission, IsAuthenticatedOrReadOnly
 )
 from .services import get_file
+from .filters import RecipeFilterBackend
 
 
 class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
@@ -196,29 +197,8 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = LimitOffsetPagination
     search_fields = ('^author', '^tags', '^name')
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-        params = self.request.query_params
-        if 'is_favorited' in params and int(params['is_favorited']):
-            queryset = user.favorite_recipes.all()
-        if (
-            'is_in_shopping_cart' in params 
-            and int(params['is_in_shopping_cart'])
-        ):
-            if hasattr(user.shoping_cart, 'recipes'):
-                queryset = user.shoping_cart.recipes.all()
-            else:
-                queryset = {}
-        if 'tags' in params:
-            tags = dict(**params)['tags']
-            tags = Tag.objects.filter(
-                slug__in=tags
-            )
-            queryset = queryset.filter(
-                tags__in=tags
-            )
-        return queryset
+    queryset = Recipe.objects.all()
+    filter_backends = (RecipeFilterBackend,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
