@@ -67,7 +67,7 @@ def registration(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def get_token(request):    
+def get_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
@@ -90,7 +90,6 @@ def get_token(request):
         'auth_token': token.key,
     }
     return Response(resp, status=status.HTTP_200_OK)
-
 
 
 @api_view(['POST'])
@@ -136,9 +135,9 @@ class UsersViewSet(ModelViewSet):
         methods=['get', 'del', 'post'],
         url_name='subscriptions',
         permission_classes=[AuthorPermission],
-        serializer_class=SubscriptionSerializer        
+        serializer_class=SubscriptionSerializer
     )
-    def subscriptions(self, request):        
+    def subscriptions(self, request):
         queryset = User.objects.filter(
             subscription__in=[User.objects.get(id=request.user.id)]
         )
@@ -273,7 +272,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='download_shopping_cart',
         permission_classes=[IsAuthenticated]
     )
-    def download_shopping_cart(self, request):        
+    def download_shopping_cart(self, request):
         shoping_cart = request.user.shoping_cart
         ingredients = [
             {f'{j.name}__{j.measurement_unit}': IngredientAmount.objects.get(
@@ -282,7 +281,7 @@ class RecipeViewSet(ModelViewSet):
             for i in shoping_cart.recipes.all()
         ]
         shoping_list = Counter()
-        for ingredient in ingredients:            
+        for ingredient in ingredients:
             shoping_list.update(ingredient)
         with open('shopping-list.txt', 'w') as file:
             for ingredient in shoping_list:
@@ -294,10 +293,7 @@ class RecipeViewSet(ModelViewSet):
         send_file = open('shopping-list.txt','rb')
         response = FileResponse(send_file, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping-list.txt"'
-
         return response
-        # return Response(status=status.HTTP_201_CREATED)
-
 
 
 class IngredientViewSet(ModelViewSet):

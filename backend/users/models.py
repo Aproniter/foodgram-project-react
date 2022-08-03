@@ -33,7 +33,7 @@ class User(AbstractUser):
         blank=True
     )
     password = models.CharField(
-        max_length=150        
+        max_length=150
     )
     role = models.CharField(
         max_length=255,
