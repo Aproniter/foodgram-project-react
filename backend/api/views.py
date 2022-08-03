@@ -276,7 +276,7 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):        
         shoping_cart = request.user.shoping_cart
         ingredients = [
-            {j.name: IngredientAmount.objects.get(
+            {f'{j.name}__{j.measurement_unit}': IngredientAmount.objects.get(
                 recipe=i, ingredient=j
             ).amount for j in i.ingredients.all()} 
             for i in shoping_cart.recipes.all()
@@ -284,13 +284,19 @@ class RecipeViewSet(ModelViewSet):
         shoping_list = Counter()
         for ingredient in ingredients:            
             shoping_list.update(ingredient)
-        with open('1.txt', 'w') as file:
+        with open('shopping-list.txt', 'w') as file:
             for ingredient in shoping_list:
+                count = shoping_list[ingredient]
+                ingredient = ingredient.split('__')
                 file.write(
-                    f'{ingredient} - {shoping_list[ingredient]}\n'
+                    f'{ingredient[0]} - {count} {ingredient[1]}\n'
                 )
+        send_file = open('shopping-list.txt','rb')
+        response = FileResponse(send_file, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping-list.txt"'
 
-        return Response(status=status.HTTP_201_CREATED)
+        return response
+        # return Response(status=status.HTTP_201_CREATED)
 
 
 
