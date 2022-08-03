@@ -3,8 +3,8 @@ services:
   db:
     image: postgres:13.0-alpine
     volumes:
-      - /var/lib/postgresql/data/
-    container_name: infra_db
+      - postgres_data:/var/lib/postgresql/data/
+    container_name: db
     env_file:
       - ./.env
   frontend:
@@ -13,13 +13,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+    container_name: frontend
   backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
     volumes:
       - static_value:/usr/share/nginx/html/static/
-    container_name: api 
+    container_name: api
     ports:
       - "8000:8000"
     depends_on:
@@ -41,9 +42,11 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/usr/share/nginx/html/static/api/
+    container_name: nginx
     depends_on:
       - backend
 
 volumes:  
   static_value:
   media_value:
+  postgres_data:
