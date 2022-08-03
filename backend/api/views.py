@@ -1,5 +1,3 @@
-from collections import Counter
-
 from django.conf import settings
 from django.http import FileResponse
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -32,6 +30,7 @@ from .permissions import (
     AdminModeratorAuthorPermission, IsAdminOrReadOnly,
     AdminOnly, AuthorPermission, IsAuthenticatedOrReadOnly
 )
+from .services import get_file
 
 
 class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
@@ -108,7 +107,7 @@ class UsersViewSet(ModelViewSet):
     permission_classes = [AdminOnly]
     lookup_field = 'pk'
     pagination_class = LimitOffsetPagination
-    search_fields = ('^username',)
+    search_fields = ('^username', '^email')
 
     @action(
         detail=False,
@@ -196,6 +195,7 @@ class TagViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = LimitOffsetPagination
+    search_fields = ('^author', '^tags', '^name')
     def get_queryset(self):
         queryset = Recipe.objects.all()
         user = self.request.user
@@ -279,24 +279,8 @@ class RecipeViewSet(ModelViewSet):
         if hasattr(request.user, 'shoping_cart'):
             shoping_cart = request.user.shoping_cart
         else:
-            return Response(status=status.HTTP_404_BAD_REQUEST)
-        ingredients = [
-            {f'{j.name}__{j.measurement_unit}': IngredientAmount.objects.get(
-                recipe=i, ingredient=j
-            ).amount for j in i.ingredients.all()} 
-            for i in shoping_cart.recipes.all()
-        ]
-        shoping_list = Counter()
-        for ingredient in ingredients:
-            shoping_list.update(ingredient)
-        with open('shopping-list.txt', 'w') as file:
-            for ingredient in shoping_list:
-                count = shoping_list[ingredient]
-                ingredient = ingredient.split('__')
-                file.write(
-                    f'{ingredient[0]} - {count} {ingredient[1]}\n'
-                )
-        send_file = open('shopping-list.txt','rb')
+            return Response(status=status.HTTP_404_BAD_REQUEST)        
+        send_file = get_file(shoping_cart)
         response = FileResponse(send_file, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping-list.txt"'
         return response
@@ -305,7 +289,7 @@ class RecipeViewSet(ModelViewSet):
 class IngredientViewSet(ModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
+    search_fields = ('^name',)
     def get_queryset(self):
         queryset = (
             Ingredient.objects.filter(

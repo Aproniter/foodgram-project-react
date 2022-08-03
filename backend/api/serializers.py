@@ -105,7 +105,7 @@ class UserSubscribeSerializer(UserSerializer):
             many=True,
             context=self.context
         )
-        ret = {
+        return {
                 "email": subscribe.email,
                 "id": subscribe.id,
                 "username": subscribe.username,
@@ -115,7 +115,6 @@ class UserSubscribeSerializer(UserSerializer):
                 "recipes": recipes.data,
                 "recipes_count": recipes_subscribe.count()
         }
-        return ret
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -153,7 +152,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 class Recipes(serializers.Field):
 
     def to_representation(self, value):
-        ret = [
+        return [
             {
                 'id': i.id,
                 'name': i.name,
@@ -161,7 +160,6 @@ class Recipes(serializers.Field):
                 'cooking_time': i.cooking_time
             } for i in value.recipes.all()
         ]
-        return ret
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -207,13 +205,12 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientField(serializers.RelatedField):
     amount = {}
     def to_representation(self, data):
-        ret = {
+        return {
                 'id': data.id,
                 'name': data.name,
                 'measurement_unit': data.measurement_unit,
                 'amount': self.amount[data.id]
-        } 
-        return ret
+        }
 
     def to_internal_value(self, data):
         ingredient_amount = {
@@ -227,7 +224,7 @@ class IngredientField(serializers.RelatedField):
 class IngredientReadField(serializers.Field):
 
     def to_representation(self, data):
-        ret = [{
+        return [{
                 'id': i.id,
                 'name': i.name,
                 'measurement_unit': i.measurement_unit,
@@ -236,18 +233,16 @@ class IngredientReadField(serializers.Field):
                     ingredient=i.id
                 ).amount
         } for i in data.ingredients.all()]
-        return ret
 
 
 class TagField(serializers.RelatedField):
     def to_representation(self, data):
-        ret = {
+        return {
                 'id': data.id,
                 'name': data.name,
                 'color': data.color,
                 'slug': data.slug
-        } 
-        return ret
+        }
 
     def to_internal_value(self, data):
         return data
@@ -261,7 +256,7 @@ class AuthorField(serializers.Field):
             if self.context['request'].user.is_authenticated 
             else False
         )
-        ret = {
+        return {
                 'id': data.author.id,
                 'email': data.author.email,
                 'username': data.author.username,
@@ -270,8 +265,7 @@ class AuthorField(serializers.Field):
                 'is_subscribed': (
                     
                 )
-        } 
-        return ret
+        }
 
     def to_internal_value(self, data):
         return data
@@ -337,24 +331,28 @@ class RecipeWriteSerializer(RecipeSerializer):
     def create(self, data):
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
-            cooking_time=data.get('cooking_time'),
-            text=data.get('text'),
-            name=data.get('name'),
-            image=data.get('image'),
+            cooking_time=self.validated_data.get('cooking_time'),
+            text=self.validated_data.get('text'),
+            name=self.validated_data.get('name'),
+            image=self.validated_data.get('image'),
         )
-        recipe.ingredients.set([i['ingredient'] for i in data.get('ingredients')])
-        recipe.tags.set(data.get('tags'))
-        self._create_amount(recipe, data)
+        recipe.ingredients.set(
+            [i['ingredient'] for i in self.validated_data.get('ingredients')]
+        )
+        recipe.tags.set(self.validated_data.get('tags'))
+        self._create_amount(recipe, self.validated_data)
         return recipe
 
     def update(self, obj, data):
-        obj.cooking_time=data.get('cooking_time')
-        obj.text=data.get('text', obj.text)
-        obj.name=data.get('name', obj.name)
-        obj.image=data.get('image', obj.image)
-        obj.ingredients.set([i['ingredient'] for i in data.get('ingredients')])
-        obj.tags.set(data.get('tags'))
-        self._create_amount(obj, data)
+        obj.cooking_time = self.validated_data.get('cooking_time')
+        obj.text = self.validated_data.get('text', obj.text)
+        obj.name = self.validated_data.get('name', obj.name)
+        obj.image = self.validated_data.get('image', obj.image)
+        obj.ingredients.set(
+            [i['ingredient'] for i in self.validated_data.get('ingredients')]
+        )
+        obj.tags.set(self.validated_data.get('tags'))
+        self._create_amount(obj, self.validated_data)
         obj.save()
         return obj
 
@@ -412,13 +410,12 @@ class RecipeToShoppingCart(serializers.Serializer):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже есть в списке покупок.'}
             )
-        ret = {
+        return {
                 'id': recipe.id,
                 'name': recipe.name,
                 'image': recipe.image,
                 'cooking_time': recipe.cooking_time,
         }
-        return ret
 
 
 class RecipeToFavoriteList(serializers.Serializer):
@@ -442,10 +439,9 @@ class RecipeToFavoriteList(serializers.Serializer):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже есть в избранном.'}
             )
-        ret = {
+        return {
                 'id': recipe.id,
                 'name': recipe.name,
                 'image': recipe.image,
                 'cooking_time': recipe.cooking_time,
         }
-        return ret

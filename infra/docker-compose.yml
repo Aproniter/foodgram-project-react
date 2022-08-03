@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - static_value:/usr/share/nginx/html/static/
+      - media_value:/usr/share/nginx/html/media/
     container_name: api
     ports:
       - "8000:8000"
@@ -42,6 +43,7 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/usr/share/nginx/html/static/api/
+      - media_value:/usr/share/nginx/html/media/api/
     container_name: nginx
     depends_on:
       - backend

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тег',
@@ -31,7 +32,7 @@ class Ingredient(models.Model):
         max_length=255
     )    
     measurement_unit = models.CharField(
-        verbose_name='Еденица измерения',
+        verbose_name='Единица измерения',
         max_length=255
     )
 
@@ -40,7 +41,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return self.name
+        return f'{self.name} {self.measurement_unit}'
 
 
 class IngredientAmount(models.Model):
@@ -55,6 +56,29 @@ class IngredientAmount(models.Model):
         on_delete=models.CASCADE
     )
     amount = models.IntegerField()
+
+    class Meta:
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецепте'
+
+    def __str__(self):
+        return f'{self.recipe.name} - {self.ingredient.name}'
+
+    def validate_unique(self, exclude=None):
+        queryset = IngredientAmount.objects.filter(
+            amount=self.amount
+        )
+        if queryset.filter(
+            recipe__name=self.recipe__name,
+            ingredient__name=self.ingredient__name
+        ).exists():
+            raise ValidationError('Уже существует.')
+
+    def save(self, *args, **kwargs):
+
+        self.validate_unique()
+
+        super(IngredientAmount, self).save(*args, **kwargs)
 
 
 class Recipe(models.Model):
