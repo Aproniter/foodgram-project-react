@@ -1,6 +1,12 @@
 version: '3.3'
 services:
-
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - /var/lib/postgresql/data/
+    container_name: infra_db
+    env_file:
+      - ./.env
   frontend:
     build:
       context: ../frontend
@@ -11,15 +17,15 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    volumes:     
+    volumes:
       - static_value:/usr/share/nginx/html/static/
     container_name: api 
-    env_file:
-      - ../backend/.env
     ports:
       - "8000:8000"
-    depends_on:     
-      - frontend
+    depends_on:
+      - db
+    env_file:
+      - ./.env
     command: >
       bash -c '
       python manage.py collectstatic --no-input &&
@@ -35,7 +41,7 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/usr/share/nginx/html/static/api/
-    depends_on:     
+    depends_on:
       - backend
 
 volumes:  

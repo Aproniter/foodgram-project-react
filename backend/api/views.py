@@ -46,6 +46,7 @@ account_activation_token = AccountActivationTokenGenerator()
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def registration(request):
     serializer = RegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -53,10 +54,11 @@ def registration(request):
         user, created = User.objects.get_or_create(
             username=request.data['username'],
             email=request.data['email'],
-            password=request.data['password'],
             first_name=request.data['first_name'],
             last_name=request.data['last_name'],
         )
+        user.set_password(request.data['password'])
+        user.save()        
         request.data.update({'id': user.id})
     except IntegrityError:
         raise ValidationError(
@@ -206,7 +208,10 @@ class RecipeViewSet(ModelViewSet):
             'is_in_shopping_cart' in params 
             and int(params['is_in_shopping_cart'])
         ):
-            queryset = user.shoping_cart.recipes.all()
+            if hasattr(user.shoping_cart, 'recipes'):
+                queryset = user.shoping_cart.recipes.all()
+            else:
+                queryset = {}
         if 'tags' in params:
             tags = dict(**params)['tags']
             tags = Tag.objects.filter(
@@ -273,7 +278,10 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        shoping_cart = request.user.shoping_cart
+        if hasattr(request.user, 'shoping_cart'):
+            shoping_cart = request.user.shoping_cart
+        else:
+            return Response(status=status.HTTP_404_BAD_REQUEST)
         ingredients = [
             {f'{j.name}__{j.measurement_unit}': IngredientAmount.objects.get(
                 recipe=i, ingredient=j
