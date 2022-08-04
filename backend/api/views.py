@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django_filters import rest_framework as filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
@@ -198,7 +199,9 @@ class RecipeViewSet(ModelViewSet):
     pagination_class = LimitOffsetPagination
     search_fields = ('^author', '^tags', '^name')
     queryset = Recipe.objects.all()
-    filter_backends = (RecipeFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ('tags',)
+    filterset_class  = RecipeFilterBackend
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

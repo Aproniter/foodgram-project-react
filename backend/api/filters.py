@@ -1,35 +1,26 @@
-from rest_framework import filters
+from django_filters import FilterSet, CharFilter
+from django_filters import NumberFilter
 
-from recipes.models import Tag
+from recipes.models import Tag, Recipe
 
 
-class RecipeFilterBackend(filters.BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        user = request.user
-        params = request.query_params
-        is_favorited = params.get(
-            "is_favorited", None
-        )
-        is_in_shopping_cart = params.get(
-            "is_in_shopping_cart", None
-        )
-        tags = params.get(
-            "tags", None
-        )
+class RecipeFilterBackend(FilterSet):
+    tags = CharFilter(
+        field_name='tags__slug',
+    )
 
-        if is_favorited and int(params['is_favorited']):
-            queryset = user.favorite_recipes.all()
-        if is_in_shopping_cart and int(params['is_in_shopping_cart']):
-            if hasattr(user.shoping_cart, 'recipes'):
-                queryset = user.shoping_cart.recipes.all()
-            else:
-                queryset = {}
-        if tags:
-            tags = dict(**params)['tags']
-            tags = Tag.objects.filter(
-                slug__in=tags
-            )
-            queryset = queryset.filter(
-                tags__in=tags
-            )
+    class Meta:
+        model = Recipe
+        fields =('tags',)
+
+    @property
+    def qs(self):
+        queryset = super().qs
+        user = getattr(self.request, 'user', None)
+        is_favorited = self.request.GET.get('is_favorited')
+        if is_favorited:
+            queryset = queryset.filter(users=user)
+        is_in_shopping_cart = self.request.GET.get('is_in_shopping_cart')
+        if is_in_shopping_cart:
+            queryset = queryset.filter(shoping_cart=user.shoping_cart)
         return queryset
