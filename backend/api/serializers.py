@@ -61,16 +61,28 @@ class TokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id', 'email', 'username',
+            'first_name', 'last_name',
+            'is_subscribed'
+        )
         model = User
+
+    def get_is_subscribed(self, obj):
+        if not self.context['request'].user.is_authenticated:
+            return False
+        return (obj in
+        self.context['request'].user.subscriptions.all())
 
 
 class UserSubscribeSerializer(UserSerializer):
     recipes_limit = serializers.IntegerField()
 
     def validate(self, data):
-        user = self.context['request'].user  
+        user = self.context['request'].user
         subscribe = get_object_or_404(
             User, 
             pk=self.initial_data['pk']
@@ -248,37 +260,12 @@ class TagField(serializers.RelatedField):
         return data
 
 
-class AuthorField(serializers.Field):
-    def to_representation(self, data):
-        is_subscribed = (
-            data.author in
-            self.context['request'].user.subscriptions.all()
-            if self.context['request'].user.is_authenticated 
-            else False
-        )
-        return {
-                'id': data.author.id,
-                'email': data.author.email,
-                'username': data.author.username,
-                'first_name': data.author.first_name,
-                'last_name': data.author.last_name,
-                'is_subscribed': (
-                    
-                )
-        }
-
-    def to_internal_value(self, data):
-        return data
-
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagField(
         many=True,
         queryset=Tag.objects.all()
     )
-    author = AuthorField(
-        required=False,
-        source='*'
-    )
+    author = UserSerializer()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     
