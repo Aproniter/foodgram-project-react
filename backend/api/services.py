@@ -1,22 +1,18 @@
-from collections import Counter
+from django.db.models import Sum, Count, Subquery, OuterRef
 
-from recipes.models import IngredientAmount
+from recipes.models import Ingredient, IngredientAmount
+
 
 def get_file(shopping_cart):
-    ingredients = [
-        {j: IngredientAmount.objects.get(
-            recipe=i, ingredient=j
-        ).amount for j in i.ingredients.all()} 
-        for i in shopping_cart.recipes.all()
-    ]
-    shoping_list = Counter()
-    for ingredient in ingredients:
-        shoping_list.update(ingredient)
+    ingredients = Ingredient.objects.filter(
+        recipes__in=shopping_cart.recipes.all()
+    ).annotate(
+        amount=Sum('recipes__ingredientamount__amount')
+    )
     with open('shopping-list.txt', 'w') as file:
-        for ingredient in shoping_list:
-            count = shoping_list[ingredient]
+        for i in ingredients:
             file.write(
-                f'{ingredient.name} - {count} {ingredient.measurement_unit}\n'
+                f'{i.name} - {i.amount} {i.measurement_unit}\n'
             )
     send_file = open('shopping-list.txt','rb')
     return send_file

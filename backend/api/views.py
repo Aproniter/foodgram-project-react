@@ -270,6 +270,7 @@ class IngredientViewSet(ModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     search_fields = ('^name',)
+    
     def get_queryset(self):
         queryset = (
             Ingredient.objects.filter(
