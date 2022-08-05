@@ -106,7 +106,7 @@ def logout(request):
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AdminOnly]
+    permission_classes = [AuthorPermission]
     lookup_field = 'pk'
     pagination_class = LimitOffsetPagination
     search_fields = ('^username', '^email')
@@ -133,7 +133,7 @@ class UsersViewSet(ModelViewSet):
 
     @action(
         detail=False,
-        methods=['get', 'del', 'post'],
+        methods=['get', 'delete', 'post'],
         url_name='subscriptions',
         permission_classes=[AuthorPermission],
         serializer_class=SubscriptionSerializer

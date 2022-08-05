@@ -60,14 +60,13 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
             'id', 'email', 'username',
             'first_name', 'last_name',
-            'is_subscribed'
+            'is_subscribed', 'recipes_limit'
         )
         model = User
 

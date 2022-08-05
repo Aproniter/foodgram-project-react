@@ -30,12 +30,12 @@ router.register(
 )
 
 urlpatterns = [
+    path('auth/token/login/', get_token, name='get_token'),
+    path('auth/token/logout/', logout, name='logout'),
+    path('', include(router.urls)),
     path(
         'users/',
         registration,
         name='registration'
     ),
-    path('auth/token/login/', get_token, name='get_token'),
-    path('auth/token/logout/', logout, name='logout'),
-    path('', include(router.urls)),
 ]
