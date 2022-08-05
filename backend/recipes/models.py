@@ -108,7 +108,6 @@ class Recipe(models.Model):
         'Ingredient',
         verbose_name='Ингредиенты',
         related_name='recipes',
-        blank=True
     )
     image = models.TextField(
         verbose_name='Изображение',
@@ -120,7 +119,6 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes',
     )
-    
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -141,3 +139,6 @@ class ShopingCart(models.Model):
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
+
+    def __str__(self):
+        return f'Корзина пользователя - {self.user.get().username}'

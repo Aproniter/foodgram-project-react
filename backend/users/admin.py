@@ -10,6 +10,7 @@ class RecipeInline(admin.TabularInline):
 
 
 class UserAdmin(admin.ModelAdmin):
+    search_fields = ('username', 'email')
     inlines = (RecipeInline,)
 
 
