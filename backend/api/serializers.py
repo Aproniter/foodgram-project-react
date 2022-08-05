@@ -322,7 +322,10 @@ class RecipeWriteSerializer(RecipeSerializer):
             raise serializers.ValidationError(
                 'Должно быть больше нуля.'
             )
-        if Recipe.objects.filter(name=data['name']).exists():
+        if (
+            not self.instance
+            and Recipe.objects.filter(name=data['name']).exists()
+        ):
             raise serializers.ValidationError(
                 'Рецепт с таким именем уже существует.'
             )
