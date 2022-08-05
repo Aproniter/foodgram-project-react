@@ -200,7 +200,6 @@ class RecipeViewSet(ModelViewSet):
     search_fields = ('^author', '^tags', '^name')
     queryset = Recipe.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('tags',)
     filterset_class  = RecipeFilterBackend
 
     def get_serializer_class(self):

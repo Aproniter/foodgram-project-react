@@ -5,10 +5,18 @@ from recipes.models import Tag, Recipe
 
 
 class RecipeFilterBackend(FilterSet):
+    tags = CharFilter(
+        field_name='tags__slug',
+        method='filter_tags'
+    )
 
     class Meta:
         model = Recipe
         fields = '__all__'
+
+    def filter_tags(self, queryset, name, tags):
+        filter_tags = dict(self.data)['tags']
+        return queryset.filter(tags__slug__in=filter_tags)
 
     @property
     def qs(self):
@@ -20,7 +28,4 @@ class RecipeFilterBackend(FilterSet):
         is_in_shopping_cart = self.request.GET.get('is_in_shopping_cart')
         if is_in_shopping_cart:
             queryset = queryset.filter(shoping_cart=user.shoping_cart)
-        if 'tags' in self.request.GET:
-            tags = list(self.request.GET.get('tags'))
-            queryset = queryset.filter(tags__in=tags)
         return queryset
