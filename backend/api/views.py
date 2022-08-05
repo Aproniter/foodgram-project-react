@@ -277,7 +277,9 @@ class IngredientViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = (
             Ingredient.objects.filter(
-                name__istartswith=self.request.query_params.get('name')
+                name__istartswith=self.request.query_params.get(
+                    'name'
+                ).decode('utf-8')
             ) 
             if self.request.query_params.get('name') 
             else Ingredient.objects.all()
