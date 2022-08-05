@@ -55,7 +55,7 @@ class IngredientAmount(models.Model):
         null=True,
         on_delete=models.CASCADE
     )
-    amount = models.IntegerField()
+    amount = models.FloatField()
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
