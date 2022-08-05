@@ -81,8 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeSerializer(UserSerializer):
-    def validate(self, data):
-        # print(self.context['request'].data['recipes_limit'])
+    def validate(self, data):        
         user = self.context['request'].user
         subscribe = get_object_or_404(
             User, 
@@ -112,7 +111,7 @@ class UserSubscribeSerializer(UserSerializer):
             )
         recipes_subscribe = Recipe.objects.filter(
                 author=subscribe
-        )#[:self.context['request'].data['recipes_limit']]
+        )
         recipes = RecipeReadSerializer(
             recipes_subscribe,
             many=True,
