@@ -5,9 +5,6 @@ from recipes.models import Tag, Recipe
 
 
 class RecipeFilterBackend(FilterSet):
-    tags = CharFilter(
-        field_name='tags__slug',
-    )
 
     class Meta:
         model = Recipe
@@ -23,4 +20,7 @@ class RecipeFilterBackend(FilterSet):
         is_in_shopping_cart = self.request.GET.get('is_in_shopping_cart')
         if is_in_shopping_cart:
             queryset = queryset.filter(shoping_cart=user.shoping_cart)
+        tags = list(self.request.GET.get('tags'))
+        if tags:
+            queryset = queryset.filter(tags__in=tags)
         return queryset
