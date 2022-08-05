@@ -209,6 +209,10 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
 
     def to_internal_value(self, data):
+        if not Tag.objects.filter(id=data).exists():
+            raise serializers.ValidationError(
+                'Тэга не существует.'
+            )
         return data
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -233,7 +237,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         }
         self.amount.update({data['id']: data['amount']})
         return ingredient_amount
-        
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
@@ -308,6 +312,20 @@ class RecipeWriteSerializer(RecipeSerializer):
         self._create_amount(obj, self.validated_data)
         obj.save()
         return obj
+
+    def validate_cooking_time(self, cooking_time):
+        if cooking_time <= 0:
+            raise serializers.ValidationError(
+                'Должно быть больше нуля.'
+            )
+        return cooking_time
+
+    def validate_name(self, name):
+        if Recipe.objects.filter(name=name).exists():
+            raise serializers.ValidationError(
+                'Рецепт с таким именем уже существует.'
+            )
+        return name
 
     def get_is_favorited(self, obj):
         try:
