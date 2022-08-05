@@ -8,7 +8,6 @@ class RecipeFilterBackend(FilterSet):
 
     class Meta:
         model = Recipe
-        fields =('tags',)
 
     @property
     def qs(self):
