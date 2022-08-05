@@ -22,6 +22,5 @@ class RecipeFilterBackend(FilterSet):
             queryset = queryset.filter(shoping_cart=user.shoping_cart)
         if 'tags' in self.request.GET:
             tags = list(self.request.GET.get('tags'))
-        if tags:
             queryset = queryset.filter(tags__in=tags)
         return queryset
