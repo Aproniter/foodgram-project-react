@@ -223,7 +223,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
     def to_representation(self, data):
-        try
+        try:
             ingredient_amount = self.amount[data.id]
         except KeyError:
             ingredient_amount = 0
