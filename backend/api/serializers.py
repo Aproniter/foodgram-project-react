@@ -81,11 +81,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeSerializer(UserSerializer):
-    recipes_limit = serializers.IntegerField(
-        write_only=True
-    )
-
     def validate(self, data):
+        print(self.context['request'].data['recipes_limit'])
         user = self.context['request'].user
         subscribe = get_object_or_404(
             User, 
