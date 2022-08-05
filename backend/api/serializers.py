@@ -98,18 +98,18 @@ class UserSubscribeSerializer(UserSerializer):
                 return {'deleted': True}
             else:
                 raise serializers.ValidationError(
-                    {'errors': 'Вы не подписаны на этого пользователя.'}
+                    'Вы не подписаны на этого пользователя.'
                 )
         if not subscriptions:
             if subscribe != user:
                 user.subscriptions.add(subscribe)
             else:
                 raise serializers.ValidationError(
-                {'errors': 'Нельзя подписаться на себя.'}
+                'Нельзя подписаться на себя.'
                 )
         else:
             raise serializers.ValidationError(
-                {'errors': 'Вы уже подписаны на этого пользователя.'}
+                'Вы уже подписаны на этого пользователя.'
             )
         recipes_subscribe = Recipe.objects.filter(
                 author=subscribe
@@ -151,15 +151,15 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         if 'current_password' not in data:
             raise serializers.ValidationError(
-                    {'current_password': 'Обязательное поле.'}
+                    'Обязательное поле.'
                 )
         if 'new_password' not in data:
             raise serializers.ValidationError(
-                    {'new_password': 'Обязательное поле.'}
+                    'Обязательное поле.'
                 )            
         if not check_password(data['current_password'], user.password):
             raise serializers.ValidationError(
-                    {'current_password': 'Неверный пароль.'}
+                    'Неверный пароль.'
                 )
         return data
 
@@ -313,19 +313,16 @@ class RecipeWriteSerializer(RecipeSerializer):
         obj.save()
         return obj
 
-    def validate_cooking_time(self, cooking_time):
-        if cooking_time <= 0:
+    def validate(self, data):
+        if data['cooking_time'] <= 0:
             raise serializers.ValidationError(
                 'Должно быть больше нуля.'
             )
-        return cooking_time
-
-    def validate_name(self, name):
-        if Recipe.objects.filter(name=name).exists():
+        if Recipe.objects.filter(name=data['name']).exists():
             raise serializers.ValidationError(
                 'Рецепт с таким именем уже существует.'
             )
-        return name
+        return data
 
     def get_is_favorited(self, obj):
         try:
@@ -383,13 +380,13 @@ class RecipeToShoppingCart(serializers.Serializer):
                 return {'deleted': True}
             else:
                 raise serializers.ValidationError(
-                    {'errors': 'Рецепта нет в списке покупок.'}
+                    'Рецепта нет в списке покупок.'
                 )
         if not shoping_cart.recipes.filter(pk=recipe.pk).exists():
             shoping_cart.recipes.add(recipe)
         else:
             raise serializers.ValidationError(
-                {'errors': 'Рецепт уже есть в списке покупок.'}
+                'Рецепт уже есть в списке покупок.'
             )
         return {
                 'id': recipe.id,
@@ -412,13 +409,13 @@ class RecipeToFavoriteList(serializers.Serializer):
                 return {'deleted': True}
             else:
                 raise serializers.ValidationError(
-                    {'errors': 'Рецепта нет в избранном.'}
+                    'Рецепта нет в избранном.'
                 )
         if not user.favorite_recipes.filter(pk=recipe.pk).exists():
             user.favorite_recipes.add(recipe)
         else:
             raise serializers.ValidationError(
-                {'errors': 'Рецепт уже есть в избранном.'}
+                'Рецепт уже есть в избранном.'
             )
         return {
                 'id': recipe.id,
