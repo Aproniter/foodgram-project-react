@@ -60,13 +60,14 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
             'id', 'email', 'username',
             'first_name', 'last_name',
-            'is_subscribed', 'recipes_limit'
+            'is_subscribed',
         )
         model = User
 
@@ -80,7 +81,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeSerializer(UserSerializer):
-    recipes_limit = serializers.IntegerField()
+    recipes_limit = serializers.IntegerField(
+        allow_blank=False, write_only=True
+    )
 
     def validate(self, data):
         user = self.context['request'].user
