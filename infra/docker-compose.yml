@@ -15,7 +15,7 @@ services:
       - ../frontend/:/app/result_build/
     container_name: frontend
   backend:
-    image: aproniter/foodgram:latest
+    image: aproniter/foodgram
     restart: always
     # build:
     #   context: ../backend
