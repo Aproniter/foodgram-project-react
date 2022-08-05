@@ -223,11 +223,15 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
     def to_representation(self, data):
+        try
+            ingredient_amount = self.amount[data.id]
+        except KeyError:
+            ingredient_amount = 0
         return {
                 'id': data.id,
                 'name': data.name,
                 'measurement_unit': data.measurement_unit,
-                'amount': self.amount[data.id]
+                'amount': ingredient_amount
         }
 
     def to_internal_value(self, data):
