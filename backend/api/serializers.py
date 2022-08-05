@@ -212,14 +212,12 @@ class TagSerializer(serializers.ModelSerializer):
         return data
 
 class IngredientSerializer(serializers.ModelSerializer):
+    amount = {}
 
     class Meta:
-        fields = '__all__'    
+        fields = '__all__'
         model = Ingredient
 
-
-class IngredientField(serializers.RelatedField):
-    amount = {}
     def to_representation(self, data):
         return {
                 'id': data.id,
@@ -235,21 +233,7 @@ class IngredientField(serializers.RelatedField):
         }
         self.amount.update({data['id']: data['amount']})
         return ingredient_amount
-
-
-class IngredientReadField(serializers.Field):
-
-    def to_representation(self, data):
-        return [{
-                'id': i.id,
-                'name': i.name,
-                'measurement_unit': i.measurement_unit,
-                'amount': IngredientAmount.objects.get(
-                    recipe=data.id,
-                    ingredient=i.id
-                ).amount
-        } for i in data.ingredients.all()]
-
+        
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
@@ -281,10 +265,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(RecipeSerializer):
-    ingredients = IngredientField(
-        many=True,
-        queryset=Ingredient.objects.all(),
-    )
+    ingredients = IngredientSerializer(many=True)
 
     def _create_amount(self, obj, data):
         amounts = IngredientAmount.objects.filter(
@@ -300,7 +281,7 @@ class RecipeWriteSerializer(RecipeSerializer):
         ]
         amounts = IngredientAmount.objects.bulk_create(amount_objs)
     
-    def create(self, data):
+    def create(self, data):        
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
             cooking_time=self.validated_data.get('cooking_time'),
@@ -349,9 +330,19 @@ class RecipeWriteSerializer(RecipeSerializer):
 
 
 class RecipeReadSerializer(RecipeSerializer):
-    ingredients = IngredientReadField(
-        source='*'
-    )
+    ingredients = serializers.SerializerMethodField()
+
+    def get_ingredients(self, obj):
+        ingredients = obj.ingredients.all()
+        return [{
+                'id': i.id,
+                'name': i.name,
+                'measurement_unit': i.measurement_unit,
+                'amount': IngredientAmount.objects.get(
+                    recipe=obj.id,
+                    ingredient=i.id
+                ).amount
+        } for i in ingredients]
 
 
 class RecipeToShoppingCart(serializers.Serializer):
