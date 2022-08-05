@@ -82,7 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserSubscribeSerializer(UserSerializer):
     recipes_limit = serializers.IntegerField(
-        allow_blank=False, write_only=True
+        write_only=True
     )
 
     def validate(self, data):
