@@ -208,6 +208,8 @@ class TagSerializer(serializers.ModelSerializer):
         )
         model = Tag
 
+    def to_internal_value(self, data):
+        return data
 
 class IngredientSerializer(serializers.ModelSerializer):
 
@@ -249,25 +251,9 @@ class IngredientReadField(serializers.Field):
         } for i in data.ingredients.all()]
 
 
-class TagField(serializers.RelatedField):
-    def to_representation(self, data):
-        return {
-                'id': data.id,
-                'name': data.name,
-                'color': data.color,
-                'slug': data.slug
-        }
-
-    def to_internal_value(self, data):
-        return data
-
-
 class RecipeSerializer(serializers.ModelSerializer):
-    tags = TagField(
-        many=True,
-        queryset=Tag.objects.all()
-    )
-    author = UserSerializer()
+    tags = TagSerializer(many=True)
+    author = UserSerializer(required=False)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     
