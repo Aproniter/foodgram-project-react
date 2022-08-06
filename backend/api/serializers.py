@@ -33,7 +33,10 @@ class RegistrationSerializer(serializers.Serializer):
     )
 
     class Meta:
-        fields = ('email', 'username', 'password')
+        fields = (
+            'email', 'username', 'password', 
+            'first_name', 'last_name'
+        )
 
     def validate_username(self, data):
         if re.match(r'^[\\w.@+-]+\\z', data):

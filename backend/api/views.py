@@ -47,28 +47,6 @@ account_activation_token = AccountActivationTokenGenerator()
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def registration(request):
-    serializer = RegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    try:
-        user, created = User.objects.get_or_create(
-            username=request.data['username'],
-            email=request.data['email'],
-            first_name=request.data['first_name'],
-            last_name=request.data['last_name'],
-        )
-        user.set_password(request.data['password'])
-        user.save()        
-        request.data.update({'id': user.id})
-    except IntegrityError:
-        raise ValidationError(
-            'Некорректные данные.'
-        )
-    return Response(request.data, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
 def get_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -94,7 +72,7 @@ def get_token(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def logout(request):
     try:
         Token.objects.get(user=request.user).delete()
@@ -106,10 +84,29 @@ def logout(request):
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AuthorPermission]
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
     pagination_class = LimitOffsetPagination
     search_fields = ('^username', '^email')
+
+    def create(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user, created = User.objects.get_or_create(
+                username=request.data['username'],
+                email=request.data['email'],
+                first_name=request.data['first_name'],
+                last_name=request.data['last_name'],
+            )
+            user.set_password(request.data['password'])
+            user.save()
+            request.data.update({'id': user.id})
+        except IntegrityError:
+            raise ValidationError(
+                'Некорректные данные.'
+            )
+        return Response(request.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
