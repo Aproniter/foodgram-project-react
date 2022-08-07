@@ -258,6 +258,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if not self.context['request'].user.is_authenticated:
             return False
         return User.objects.filter(
+            id=self.context['request'].user.id
             favorite_recipes=obj
         ).exists()
 
@@ -335,7 +336,6 @@ class RecipeWriteSerializer(RecipeSerializer):
     def get_is_favorited(self, obj):
         try:
             self.context['request'].user.favorite_recipes.add(obj)
-            self.context['request'].user.favorite_recipes.save()
             return True
         except:
             return False
