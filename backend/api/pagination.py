@@ -7,7 +7,10 @@ class CustomPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
     
     def get_paginated_response(self, data):
-        print(data)
+        print_data = data
+        for i in print_data:
+            i.pop('image')
+        print(print_data)
         return Response({
             'next': self.get_next_link(),
             'previous': self.get_previous_link(),
