@@ -334,7 +334,8 @@ class RecipeWriteSerializer(RecipeSerializer):
 
     def get_is_favorited(self, obj):
         try:
-            self.context['request'].user.favorite_recipes.add(obj)      
+            self.context['request'].user.favorite_recipes.add(obj)
+            self.context['request'].user.favorite_recipes.save()
             return True
         except:
             return False
