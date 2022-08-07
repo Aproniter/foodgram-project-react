@@ -14,7 +14,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 
 from users.models import User
 from recipes.models import (
@@ -86,7 +86,7 @@ class UsersViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     lookup_field = 'pk'
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     search_fields = ('^username', '^email')
 
     def create(self, request):
@@ -196,7 +196,7 @@ class TagViewSet(ModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     search_fields = ('^author', '^tags', '^name')
     queryset = Recipe.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
