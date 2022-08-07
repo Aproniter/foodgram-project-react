@@ -236,6 +236,10 @@ class IngredientSerializer(serializers.ModelSerializer):
         }
 
     def to_internal_value(self, data):
+        if data['amount'] <= 0:
+            raise serializers.ValidationError(
+                'Количество должно быть положительным.'
+            )
         ingredient_amount = {
             'amount': data['amount'],
             'ingredient': Ingredient.objects.get(id=data['id'])
