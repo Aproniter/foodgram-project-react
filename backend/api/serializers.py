@@ -324,6 +324,12 @@ class RecipeWriteSerializer(RecipeSerializer):
 
     def update(self, obj, data):
         ingredients = [i['ingredient'] for i in self.validated_data.get('ingredients')]
+        amounts = [int(i['amount']) for i in self.validated_data.get('ingredients')]
+        for amount in amounts:
+            if amount < 0:
+                raise serializers.ValidationError(
+                    'Количество должно быть положительным.'
+                )
         if (
             len(ingredients) > 1 
             and len(ingredients) != len(set(ingredients))
