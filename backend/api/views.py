@@ -33,6 +33,7 @@ from .permissions import (
 )
 from .services import get_file
 from .filters import RecipeFilterBackend
+from .pagination import CustomPageNumberPagination
 
 
 class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
@@ -196,7 +197,7 @@ class TagViewSet(ModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPageNumberPagination
     search_fields = ('^author', '^tags', '^name')
     queryset = Recipe.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
