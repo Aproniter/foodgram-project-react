@@ -295,29 +295,41 @@ class RecipeWriteSerializer(RecipeSerializer):
         ]
         amounts = IngredientAmount.objects.bulk_create(amount_objs)
     
-    def create(self, data):        
+    def create(self, data):
+        ingredients = [i['ingredient'] for i in self.validated_data.get('ingredients')]
+        if (
+            len(ingredients) > 1 
+            and len(ingredients) != len(set(ingredients))
+        ):
+            raise serializers.ValidationError(
+                'Есть повторяющиеся ингредиенты.'
+            )
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
             cooking_time=self.validated_data.get('cooking_time'),
             text=self.validated_data.get('text'),
             name=self.validated_data.get('name'),
             image=self.validated_data.get('image'),
-        )
-        recipe.ingredients.set(
-            [i['ingredient'] for i in self.validated_data.get('ingredients')]
-        )
+        )        
+        recipe.ingredients.set(ingredients)
         recipe.tags.set(self.validated_data.get('tags'))
         self._create_amount(recipe, self.validated_data)
         return recipe
 
     def update(self, obj, data):
+        ingredients = [i['ingredient'] for i in self.validated_data.get('ingredients')]
+        if (
+            len(ingredients) > 1 
+            and len(ingredients) != len(set(ingredients))
+        ):
+            raise serializers.ValidationError(
+                'Есть повторяющиеся ингредиенты.'
+            )
         obj.cooking_time = self.validated_data.get('cooking_time')
         obj.text = self.validated_data.get('text', obj.text)
         obj.name = self.validated_data.get('name', obj.name)
         obj.image = self.validated_data.get('image', obj.image)
-        obj.ingredients.set(
-            [i['ingredient'] for i in self.validated_data.get('ingredients')]
-        )
+        obj.ingredients.set(ingredients)
         obj.tags.set(self.validated_data.get('tags'))
         self._create_amount(obj, self.validated_data)
         obj.save()
