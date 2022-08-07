@@ -134,15 +134,16 @@ class UsersViewSet(ModelViewSet):
         methods=['get', 'delete', 'post'],
         url_name='subscriptions',
         permission_classes=[AuthorPermission],
-        serializer_class=SubscriptionSerializer
+        serializer_class=SubscriptionSerializer,
+        pagination_class = CustomPageNumberPagination,
     )
     def subscriptions(self, request):
+        self.pagination_class.page_size = 6
         queryset = User.objects.filter(
             subscription__in=[User.objects.get(id=request.user.id)]
         )
         recipes_limit = self.request.GET.get('recipes_limit', None)
-        pagination_class = CustomPageNumberPagination
-        pagination_class.page_size = 6
+        
         if recipes_limit:
             queryset = queryset[:int(recipes_limit)]
         page = self.paginate_queryset(queryset)
