@@ -258,7 +258,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if not self.context['request'].user.is_authenticated:
             return False
         return User.objects.filter(
-            id=self.context['request'].user.id
+            id=self.context['request'].user.id,
             favorite_recipes=obj
         ).exists()
 
