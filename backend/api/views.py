@@ -205,7 +205,6 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class  = RecipeFilterBackend
-    
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
