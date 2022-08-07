@@ -200,11 +200,12 @@ class TagViewSet(ModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPageNumberPagination
     search_fields = ('^author', '^tags', '^name')
     queryset = Recipe.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class  = RecipeFilterBackend
-    pagination_class = CustomPageNumberPagination
+    
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

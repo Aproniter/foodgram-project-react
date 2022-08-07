@@ -16,7 +16,7 @@ class RecipeFilterBackend(FilterSet):
 
     def filter_tags(self, queryset, name, tags):
         filter_tags = dict(self.data)['tags']
-        return queryset.filter(tags__slug__in=filter_tags).order_by('id')
+        return queryset.filter(tags__slug__in=filter_tags).distinct()
 
     @property
     def qs(self):
