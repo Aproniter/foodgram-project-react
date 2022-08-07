@@ -341,6 +341,7 @@ class RecipeWriteSerializer(RecipeSerializer):
             return False
 
     def get_is_in_shopping_cart(self, obj):
+        print(obj)
         try:
             shoping_cart = ShopingCart.objects.get(
                 user=self.context['request'].user
@@ -348,8 +349,8 @@ class RecipeWriteSerializer(RecipeSerializer):
         except ShopingCart.DoesNotExist:
             shoping_cart = ShopingCart.objects.create()
             shoping_cart.user.add(self.context['request'].user)
-             
-        shoping_cart.recipes.add(obj)
+        finally:
+            shoping_cart.recipes.add(obj)
         return True
 
 

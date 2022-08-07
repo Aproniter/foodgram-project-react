@@ -27,11 +27,10 @@ class RecipeFilterBackend(FilterSet):
             queryset = queryset.filter(users=user)
         is_in_shopping_cart = self.request.GET.get('is_in_shopping_cart')
         if is_in_shopping_cart:
-            if not user.is_authenticated:
-                return queryset
-            try:
-                shopping_cart = user.shoping_cart
-                queryset = queryset.filter(shoping_cart=user.shoping_cart)
-            except AttributeError:
-                return queryset
+            if (
+                not user.is_authenticated or
+                not user.shoping_cart
+            ):
+                return Recipe.objects.none()
+            queryset = queryset.filter(shoping_cart=user.shoping_cart)
         return queryset
