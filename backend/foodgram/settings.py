@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', '*')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '84.201.160.242', '*', 'api']
+ALLOWED_HOSTS = ['127.0.0.1', '*', 'api']
 
 # CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_WHITELIST = [
