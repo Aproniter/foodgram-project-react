@@ -3,9 +3,6 @@ foodgram
 
 <h1 align="center">FoodGram</h1>
 
-<h3 align="center">84.201.160.242</h3>
-<h4 align="center">superuser - admin</h4>
-<h4 align="center">password - minad</h4>
 
 ### Технологии
 Python 3.7
